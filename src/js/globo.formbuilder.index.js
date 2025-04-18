@@ -374,7 +374,8 @@ var globoFormbuilder;
                                                             `${
                                                                 this.url ?? ''
                                                             }/api/front/form/${
-                                                                l.id
+                                                                // l.id
+                                                                `https://www.bodyfriend.co.kr/form-submit/${l.id}`
                                                             }/send`
                                                         );
                                             }

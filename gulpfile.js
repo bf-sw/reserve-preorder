@@ -31,7 +31,7 @@ gulp.task('serve', function () {
             baseDir: './src/', // 프로젝트 루트 디렉토리 (필요에 따라 조정)
             index: 'index.html', // 기본 페이지
         },
-        port: 8080,
+        port: 8081,
         open: true, // 브라우저 자동 실행
         notify: false, // 브라우저 알림 비활성화
     });
