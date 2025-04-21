@@ -20359,10 +20359,10 @@ header.shopify-section-group-header-group .header__wrapper {
 
 .feature-list {
   --feature-list-gap: var(--spacing-10);
-  --feature-list-items-per-row: 3;
+  --feature-list-items-per-row: 2;
   --feature-list-grid: auto-flow dense /
       repeat(var(--feature-list-items-per-row), minmax(0, 1fr));
-  --feature-list-promo-grid-column: span 3;
+  --feature-list-promo-grid-column: span 2;
   --content-over-media-gap: var(--spacing-8);
 }
 
@@ -20407,6 +20407,13 @@ header.shopify-section-group-header-group .header__wrapper {
   color: #24211e;
   font-family: "Poppins";
   line-height: 140%;
+}
+
+#shopify-section-template--17671510753417__features_EWDHjE .h5 span {
+  display: block;
+  font-size: 18px;
+  color: #686664;
+  line-height: 120%;
 }
 
 #shopify-section-template--17671510753417__features_EWDHjE .h4 {
@@ -20456,6 +20463,10 @@ header.shopify-section-group-header-group .header__wrapper {
   }
   #shopify-section-template--17671510753417__features_EWDHjE .h5 p {
     font-size: 12px;
+    line-height: 16.8px;
+  }
+  #shopify-section-template--17671510753417__features_EWDHjE .h5 span {
+    font-size: 10px;
     line-height: 16.8px;
   }
 }
@@ -20869,9 +20880,10 @@ header.shopify-section-group-header-group .header__wrapper {
     font-size: 16px;
     line-height: 16px;
   }
-  #shopify-section-template--17671510753417__hand_acupressure_pads_8jEhjx .media-with-text__content {
+  #shopify-section-template--17671510753417__hand_acupressure_pads_8jEhjx .media-with-text__content p {
     font-size: 16px;
-    line-height: 32px;
+    line-height: 30px;
+    letter-spacing: 0.03em;
   }
   #shopify-section-template--17671510753417__hand_acupressure_pads_8jEhjx .media-with-text__item {
     display: block;
@@ -20973,6 +20985,7 @@ header.shopify-section-group-header-group .header__wrapper {
 @media screen and (max-width: 699px) {
   #shopify-section-template--17671510753417__slide_KA7yJg .slide-bodytext {
     font-size: 16px;
+    line-height: 30px;
   }
   #shopify-section-template--17671510753417__slide_KA7yJg .slide-title {
     font-size: 28px;

@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 폼이 존재하면 제출 이벤트 리스너 추가
     if (form) {
-        form.addEventListener('submit', function(event) {
+        form.addEventListener('submit', function (event) {
             // 모든 입력 필드 선택
             const inputs = form.querySelectorAll('.material_outlined-input');
             let hasError = false;
@@ -63,52 +63,141 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // 파일 입력 필드 상태 업데이트 함수
+    function updateFileInputState(fileInput, previewList) {
+        // 현재 표시된 파일 목록이 비어 있는지 확인
+        const hasFiles =
+            previewList.querySelectorAll('.gfb__dropzone--preview--item')
+                .length > 0;
+
+        // 파일 입력 필드의 부모 요소에 상태 클래스 추가/제거
+        const dropzone = fileInput.closest('.gfb__dropzone');
+        if (dropzone) {
+            if (hasFiles) {
+                dropzone.classList.add('has-files');
+                dropzone.setAttribute('data-area-previewing', 'true'); // 파일이 있을 때 속성 추가
+            } else {
+                dropzone.classList.remove('has-files');
+                dropzone.setAttribute('data-area-previewing', 'false'); // 파일이 없을 때 속성 값 변경
+                // 파일 입력 필드 초기화 (새 파일 선택 가능하도록)
+                fileInput.value = '';
+            }
+        }
+    }
+
     // 파일 업로드 설정 함수
     function setupFileUpload() {
         // 모든 파일 업로드 영역 찾기
         const dropzones = document.querySelectorAll('.gfb__dropzone');
 
         dropzones.forEach(dropzone => {
-            const browseButton = dropzone.querySelector('.gfb__dropzone--placeholder--button');
-            const hiddenFileInput = dropzone.querySelector('input[type="file"][data-type="file2"]');
-            const previewArea = dropzone.querySelector('.gfb__dropzone--preview--area');
-            const placeholderContent = dropzone.querySelector('.gfb__dropzone--placeholder');
+            const browseButton = dropzone.querySelector(
+                '.gfb__dropzone--placeholder--button'
+            );
+            const hiddenFileInput = dropzone.querySelector(
+                'input[type="file"][data-type="file2"]'
+            );
+            const previewArea = dropzone.querySelector(
+                '.gfb__dropzone--preview--area'
+            );
+            const placeholderContent = dropzone.querySelector(
+                '.gfb__dropzone--placeholder'
+            );
+
+            // 초기 상태 설정 - 파일이 없으므로 false로 설정
+            dropzone.setAttribute('data-area-previewing', 'false');
+
+            // 미리보기 영역에 리스트 컨테이너가 없으면 생성
+            let previewList = previewArea.querySelector(
+                '.gfb__dropzone--preview--list'
+            );
+
+            if (!previewList) {
+                previewList = document.createElement('div');
+                previewList.className = 'gfb__dropzone--preview--list';
+                previewArea.appendChild(previewList);
+            }
+
+            // 이미 파일이 있는지 확인하고 상태 업데이트
+            if (previewList.children.length > 0) {
+                dropzone.setAttribute('data-area-previewing', 'true');
+            }
 
             if (browseButton && hiddenFileInput) {
                 // 버튼 클릭 시 파일 선택 대화상자 열기
-                browseButton.addEventListener('click', function(e) {
+                browseButton.addEventListener('click', function (e) {
                     e.preventDefault();
                     hiddenFileInput.click();
                 });
 
                 // 파일 선택 시 처리
-                hiddenFileInput.addEventListener('change', function() {
+                hiddenFileInput.addEventListener('change', function () {
                     if (this.files.length) {
-                        handleFiles(this.files, previewArea, placeholderContent, hiddenFileInput);
+                        handleFiles(
+                            this.files,
+                            previewList,
+                            placeholderContent,
+                            hiddenFileInput
+                        );
+
+                        // 파일이 추가되면 data-area-previewing 속성 업데이트
+                        updateFileInputState(hiddenFileInput, previewList);
                     }
                 });
 
                 // 드래그 앤 드롭 이벤트 설정
-                dropzone.addEventListener('dragover', function(e) {
+                dropzone.addEventListener('dragover', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
                     this.classList.add('dragover');
                 });
 
-                dropzone.addEventListener('dragleave', function(e) {
+                dropzone.addEventListener('dragleave', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
                     this.classList.remove('dragover');
                 });
 
-                dropzone.addEventListener('drop', function(e) {
+                dropzone.addEventListener('drop', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
                     this.classList.remove('dragover');
 
                     if (e.dataTransfer.files.length) {
-                        hiddenFileInput.files = e.dataTransfer.files;
-                        handleFiles(hiddenFileInput.files, previewArea, placeholderContent, hiddenFileInput);
+                        handleFiles(
+                            e.dataTransfer.files,
+                            previewList,
+                            placeholderContent,
+                            hiddenFileInput
+                        );
+
+                        // 파일이 추가되면 data-area-previewing 속성 업데이트
+                        updateFileInputState(hiddenFileInput, previewList);
+                    }
+                });
+
+                // 이미 업로드된 파일 삭제 이벤트 위임
+                previewArea.addEventListener('click', function (e) {
+                    const removeButton = e.target.closest('[data-file-remove]');
+                    if (removeButton) {
+                        const fileItem = removeButton.closest(
+                            '.gfb__dropzone--preview--item'
+                        );
+                        if (fileItem) {
+                            fileItem.remove();
+
+                            // 모든 미리보기가 제거되면 플레이스홀더 다시 표시
+                            if (previewList.children.length === 0) {
+                                // 파일 입력 필드 초기화
+                                hiddenFileInput.value = '';
+
+                                // 파일이 모두 삭제되면 data-area-previewing 속성 업데이트
+                                updateFileInputState(
+                                    hiddenFileInput,
+                                    previewList
+                                );
+                            }
+                        }
                     }
                 });
             }
@@ -116,21 +205,29 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // 파일 처리 함수
-    function handleFiles(files, previewArea, placeholderContent, fileInput) {
-        // 미리보기 영역 초기화
-        previewArea.innerHTML = '';
-
+    function handleFiles(files, previewList, placeholderContent, fileInput) {
         // 파일 확장자 제한 확인
-        const allowedExtensions = fileInput.getAttribute('data-allowed-extensions');
-        const allowedExtensionsArray = allowedExtensions ? allowedExtensions.split(',') : [];
+        const allowedExtensions = fileInput.getAttribute(
+            'data-allowed-extensions'
+        );
+        const allowedExtensionsArray = allowedExtensions
+            ? allowedExtensions.split(',')
+            : [];
 
         // 파일 크기 제한 확인
         const fileSizeLimit = fileInput.getAttribute('data-file-size-limit');
-        const maxFileSize = fileSizeLimit ? parseInt(fileSizeLimit) * 1024 * 1024 : 0; // MB를 바이트로 변환
+        const maxFileSize = fileSizeLimit
+            ? parseInt(fileSizeLimit) * 1024 * 1024
+            : 0; // MB를 바이트로 변환
 
         // 파일 개수 제한 확인
         const fileLimit = fileInput.getAttribute('data-file-limit');
         const maxFiles = fileLimit ? parseInt(fileLimit) : 0;
+
+        // 현재 표시된 파일 개수
+        const currentFileCount = previewList.querySelectorAll(
+            '.gfb__dropzone--preview--item'
+        ).length;
 
         // 유효한 파일만 필터링
         let validFiles = Array.from(files);
@@ -148,75 +245,76 @@ document.addEventListener('DOMContentLoaded', function () {
             validFiles = validFiles.filter(file => file.size <= maxFileSize);
         }
 
-        // 파일 개수 제한
-        if (maxFiles > 0 && validFiles.length > maxFiles) {
-            validFiles = validFiles.slice(0, maxFiles);
+        // 파일 개수 제한 (이미 있는 파일 + 새 파일이 최대 개수를 초과하지 않도록)
+        if (maxFiles > 0 && currentFileCount + validFiles.length > maxFiles) {
+            validFiles = validFiles.slice(0, maxFiles - currentFileCount);
         }
 
         // 유효한 파일이 있으면 미리보기 생성
         if (validFiles.length > 0) {
-            // 플레이스홀더 숨기기
-            placeholderContent.style.display = 'none';
+            // dropzone 요소 찾기 및 상태 업데이트
+            const dropzone = fileInput.closest('.gfb__dropzone');
+            if (dropzone) {
+                dropzone.setAttribute('data-area-previewing', 'true');
+            }
 
             // 각 파일에 대한 미리보기 생성
-            validFiles.forEach(file => {
-                const filePreview = document.createElement('div');
-                filePreview.className = 'gfb__dropzone--preview--item';
+            validFiles.forEach((file, index) => {
+                const fileIndex = currentFileCount + index;
+
+                // 미리보기 아이템 생성 (요청하신 마크업 구조에 맞게 수정)
+                const previewItem = document.createElement('div');
+                previewItem.className = 'gfb__dropzone--preview--item';
+
+                // 썸네일 컨테이너
+                const thumbContainer = document.createElement('div');
+                thumbContainer.className = 'gfb__dropzone--preview--item-thumb';
 
                 // 이미지 파일인 경우 미리보기 이미지 생성
                 if (file.type.startsWith('image/')) {
                     const img = document.createElement('img');
-                    img.className = 'gfb__dropzone--preview--image';
-                    img.file = file;
-                    filePreview.appendChild(img);
+                    img.alt = file.name;
+                    thumbContainer.appendChild(img);
 
                     const reader = new FileReader();
-                    reader.onload = (function(aImg) {
-                        return function(e) {
-                            aImg.src = e.target.result;
-                        };
-                    })(img);
+                    reader.onload = function (e) {
+                        img.src = e.target.result;
+                    };
                     reader.readAsDataURL(file);
                 } else {
-                    // 이미지가 아닌 파일은 아이콘으로 표시
+                    // 이미지가 아닌 파일은 기본 아이콘 표시
                     const fileIcon = document.createElement('div');
                     fileIcon.className = 'gfb__dropzone--preview--file-icon';
                     fileIcon.textContent = '📄';
-                    filePreview.appendChild(fileIcon);
+                    thumbContainer.appendChild(fileIcon);
                 }
 
-                // 파일 이름 표시
+                previewItem.appendChild(thumbContainer);
+
+                // 파일 정보 컨테이너
+                const titleContainer = document.createElement('div');
+                titleContainer.className = 'gfb__dropzone--preview--item-title';
+
+                // 파일 이름
                 const fileName = document.createElement('div');
-                fileName.className = 'gfb__dropzone--preview--filename';
+                fileName.className = 'gfb__dropzone--preview--item-filename';
                 fileName.textContent = file.name;
-                filePreview.appendChild(fileName);
+                titleContainer.appendChild(fileName);
 
                 // 삭제 버튼
-                const removeButton = document.createElement('button');
-                removeButton.type = 'button';
-                removeButton.className = 'gfb__dropzone--preview--remove';
-                removeButton.textContent = '×';
-                removeButton.addEventListener('click', function() {
-                    filePreview.remove();
+                const removeButton = document.createElement('div');
+                removeButton.className = 'gfb__dropzone--preview--item-remove';
+                removeButton.setAttribute('data-file-remove', '');
+                removeButton.setAttribute('data-file-index', fileIndex);
+                removeButton.innerHTML =
+                    '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M13.97 15.03a.75.75 0 1 0 1.06-1.06l-3.97-3.97 3.97-3.97a.75.75 0 0 0-1.06-1.06l-3.97 3.97-3.97-3.97a.75.75 0 0 0-1.06 1.06l3.97 3.97-3.97 3.97a.75.75 0 1 0 1.06 1.06l3.97-3.97 3.97 3.97Z" fill="currentColor"></path></svg>';
+                titleContainer.appendChild(removeButton);
 
-                    // 모든 미리보기가 제거되면 플레이스홀더 다시 표시
-                    if (previewArea.children.length === 0) {
-                        placeholderContent.style.display = 'block';
+                previewItem.appendChild(titleContainer);
 
-                        // 파일 입력 필드 초기화
-                        fileInput.value = '';
-                    }
-                });
-                filePreview.appendChild(removeButton);
-
-                previewArea.appendChild(filePreview);
+                // 미리보기 리스트에 추가
+                previewList.appendChild(previewItem);
             });
-        } else {
-            // 유효한 파일이 없으면 플레이스홀더 표시
-            placeholderContent.style.display = 'block';
-
-            // 파일 입력 필드 초기화
-            fileInput.value = '';
         }
     }
 
@@ -224,14 +322,22 @@ document.addEventListener('DOMContentLoaded', function () {
     function validateField(input) {
         const value = input.value.trim();
         const inputType = input.getAttribute('data-type') || input.type;
-        const fieldName = input.placeholder ||
-                        (input.closest('.globo-form-control')?.querySelector('.label-content')?.textContent.trim() || '');
+        const fieldName =
+            input.placeholder ||
+            input
+                .closest('.globo-form-control')
+                ?.querySelector('.label-content')
+                ?.textContent.trim() ||
+            '';
         let errorMessage = '';
 
         // 파일 입력 필드인 경우 별도 처리
         if (inputType === 'file2') {
             // 파일이 필수이고 선택된 파일이 없는 경우
-            if (input.hasAttribute('presence') && (!input.files || input.files.length === 0)) {
+            if (
+                input.hasAttribute('presence') &&
+                (!input.files || input.files.length === 0)
+            ) {
                 errorMessage = `Please select a file`;
                 showError(input, [errorMessage]);
                 return false;
@@ -272,14 +378,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 case 'text':
                     // 이름 필드 검사 (placeholder나 label에 'name'이 포함된 경우)
-                    if (fieldName.toLowerCase().includes('name') && !isValidName(value)) {
+                    if (
+                        fieldName.toLowerCase().includes('name') &&
+                        !isValidName(value)
+                    ) {
                         errorMessage = `Please enter a valid name`;
                         showError(input, [errorMessage]);
                         return false;
                     }
 
                     // WeChat ID 또는 ID 필드 검사
-                    if ((fieldName.toLowerCase().includes('id') || fieldName.toLowerCase().includes('wechat')) && !isValidId(value)) {
+                    if (
+                        (fieldName.toLowerCase().includes('id') ||
+                            fieldName.toLowerCase().includes('wechat')) &&
+                        !isValidId(value)
+                    ) {
                         errorMessage = `Please enter a valid ID`;
                         showError(input, [errorMessage]);
                         return false;
@@ -304,14 +417,16 @@ document.addEventListener('DOMContentLoaded', function () {
     // 전화번호 유효성 검사
     function isValidPhone(phone) {
         // 국제 전화번호 형식 (+ 기호로 시작하는 경우 포함)
-        const phoneRegex = /^(\+\d{1,3})?[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/;
+        const phoneRegex =
+            /^(\+\d{1,3})?[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/;
         return phoneRegex.test(phone);
     }
 
     // 이름 유효성 검사
     function isValidName(name) {
         // 최소 2자 이상, 문자와 공백만 허용
-        const nameRegex = /^[A-Za-z\u00C0-\u024F\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF\s]{2,}$/;
+        const nameRegex =
+            /^[A-Za-z\u00C0-\u024F\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF\s]{2,}$/;
         return nameRegex.test(name);
     }
 
